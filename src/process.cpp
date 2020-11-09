@@ -5,29 +5,30 @@
 #include <vector>
 
 #include "process.h"
+#include "linux_parser.h"
 
 using std::string;
 using std::to_string;
 using std::vector;
 
-// TODO: Return this process's ID
-int Process::Pid() { return 0; }
+Process::Process(int pid): pid_(pid) {}
 
-// TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { return 0; }
+int Process::Pid() { return pid_; }
 
-// TODO: Return the command that generated this process
-string Process::Command() { return string(); }
+float Process::CpuUtilization() { 
+    long active = LinuxParser::ActiveJiffies(Pid());
+    long total = LinuxParser::Jiffies();
+    return 100 * (float(active) / total); 
+}
 
-// TODO: Return this process's memory utilization
-string Process::Ram() { return string(); }
+string Process::Command() { return LinuxParser::Command(Pid()); }
 
-// TODO: Return the user (name) that generated this process
-string Process::User() { return string(); }
+string Process::Ram() { return LinuxParser::Ram(Pid()); }
 
-// TODO: Return the age of this process (in seconds)
-long int Process::UpTime() { return 0; }
+string Process::User() { return LinuxParser::User(Pid()); }
 
-// TODO: Overload the "less than" comparison operator for Process objects
-// REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process const& a[[maybe_unused]]) const { return true; }
+long int Process::UpTime() { return LinuxParser::UpTime(Pid()); }
+
+bool Process::operator<(Process const& a) const { 
+    return const_cast<Process&>(a).CpuUtilization() < const_cast<Process*>(this)->CpuUtilization(); 
+}
